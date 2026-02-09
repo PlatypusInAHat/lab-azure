@@ -1,0 +1,16 @@
+# Dev Environment Configuration
+# Copy this file to terraform.tfvars and update values
+# DO NOT commit terraform.tfvars to git!
+
+project_name = "labazure"
+environment  = "dev"
+location     = "East Asia"
+
+# SQL Configuration
+sql_admin_username = "sqladmin"
+sql_admin_password = "YourSecurePassword123!"  # CHANGE THIS!
+
+# 2-Phase Deployment
+# Phase 1: public_network_access_enabled = true
+# Phase 2: public_network_access_enabled = false
+public_network_access_enabled = true

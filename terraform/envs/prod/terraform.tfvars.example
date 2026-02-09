@@ -1,0 +1,15 @@
+# Production Environment Configuration
+# Copy this file to terraform.tfvars and update values
+# DO NOT commit terraform.tfvars to git!
+
+project_name = "labazure"
+environment  = "prod"
+location     = "East Asia"
+
+sql_admin_username = "sqladmin"
+sql_admin_password = "YourVerySecureProductionPassword!"  # USE STRONG PASSWORD!
+
+# Production defaults:
+# - public_network_access_enabled = false
+# - Stronger SKUs
+# - Purge protection enabled for Key Vault
