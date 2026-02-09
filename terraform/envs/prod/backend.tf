@@ -1,14 +1,14 @@
 # =============================================================================
-# Prod Environment - Backend Configuration
+# Terraform Backend Configuration - Production
 # =============================================================================
-# Remote backend REQUIRED for production
+# Remote state stored in Azure Storage
 # =============================================================================
 
-# terraform {
-#   backend "azurerm" {
-#     resource_group_name  = "tfstate-rg"
-#     storage_account_name = "tfstateXXXXX"
-#     container_name       = "tfstate"
-#     key                  = "prod/terraform.tfstate"
-#   }
-# }
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "terraform-state-rg"
+    storage_account_name = "tfstatelabazure14319852"
+    container_name       = "tfstate"
+    key                  = "prod.terraform.tfstate"
+  }
+}

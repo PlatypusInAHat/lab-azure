@@ -1,15 +1,14 @@
 # =============================================================================
-# Dev Environment - Backend Configuration
+# Terraform Backend Configuration - Development
 # =============================================================================
-# Local backend for development. Upgrade to Azure Storage for team collaboration.
+# Remote state stored in Azure Storage
 # =============================================================================
 
-# Uncomment below for remote backend:
-# terraform {
-#   backend "azurerm" {
-#     resource_group_name  = "tfstate-rg"
-#     storage_account_name = "tfstateXXXXX"
-#     container_name       = "tfstate"
-#     key                  = "dev/terraform.tfstate"
-#   }
-# }
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "terraform-state-rg"
+    storage_account_name = "tfstatelabazure14319852"
+    container_name       = "tfstate"
+    key                  = "dev.terraform.tfstate"
+  }
+}
