@@ -62,11 +62,9 @@ resource "azurerm_role_assignment" "deployer_keyvault_admin" {
   principal_id         = var.deployer_object_id
 }
 
-# Store SQL Connection String
+# Store SQL Connection String - created in Phase 1 with public access
 resource "azurerm_key_vault_secret" "sql_connection_string" {
   name         = "SqlConnectionString"
   value        = var.sql_connection_string
   key_vault_id = azurerm_key_vault.main.id
-
-  depends_on = [azurerm_role_assignment.deployer_keyvault_admin]
 }
