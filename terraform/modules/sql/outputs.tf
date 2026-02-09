@@ -12,6 +12,11 @@ output "sql_server_fqdn" {
   value       = azurerm_mssql_server.main.fully_qualified_domain_name
 }
 
+output "sql_server_name" {
+  description = "Name of the SQL Server"
+  value       = azurerm_mssql_server.main.name
+}
+
 output "database_id" {
   description = "ID of the SQL Database"
   value       = azurerm_mssql_database.main.id

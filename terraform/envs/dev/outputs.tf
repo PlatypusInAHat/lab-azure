@@ -42,6 +42,16 @@ output "sql_server_fqdn" {
   value       = module.sql.sql_server_fqdn
 }
 
+output "sql_server_name" {
+  description = "SQL Server name"
+  value       = module.sql.sql_server_name
+}
+
+output "database_name" {
+  description = "Database name"
+  value       = module.sql.database_name
+}
+
 output "storage_account_name" {
   description = "Storage Account name"
   value       = module.storage.storage_account_name
