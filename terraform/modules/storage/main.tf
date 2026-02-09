@@ -23,8 +23,10 @@ resource "azurerm_storage_account" "main" {
   tags = var.tags
 }
 
-# Blob Container
+# Blob Container - only create when public access is enabled
+# When private, App Service creates it via managed identity on first use
 resource "azurerm_storage_container" "main" {
+  count                 = var.public_network_access_enabled ? 1 : 0
   name                  = var.container_name
   storage_account_name  = azurerm_storage_account.main.name
   container_access_type = "private"

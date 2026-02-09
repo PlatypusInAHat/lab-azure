@@ -54,8 +54,9 @@ resource "azurerm_role_assignment" "app_keyvault_secrets" {
   principal_id         = var.app_service_principal_id
 }
 
-# Grant deployer admin access
+# Grant deployer admin access (optional - requires Owner role on Service Principal)
 resource "azurerm_role_assignment" "deployer_keyvault_admin" {
+  count                = var.create_deployer_role_assignment ? 1 : 0
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Administrator"
   principal_id         = var.deployer_object_id

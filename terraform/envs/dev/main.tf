@@ -164,7 +164,8 @@ module "key_vault" {
   deployer_object_id       = data.azurerm_client_config.current.object_id
   sql_connection_string    = module.sql.connection_string
 
-  public_network_access_enabled = var.public_network_access_enabled
+  public_network_access_enabled   = var.public_network_access_enabled
+  create_deployer_role_assignment = false # Requires Owner role, disabled for CI/CD
 
   tags = local.common_tags
 }

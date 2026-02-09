@@ -82,3 +82,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "create_deployer_role_assignment" {
+  description = "Create deployer role assignment (requires Owner permission)"
+  type        = bool
+  default     = true
+}
