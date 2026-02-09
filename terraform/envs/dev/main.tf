@@ -165,7 +165,7 @@ module "key_vault" {
   sql_connection_string    = module.sql.connection_string
 
   public_network_access_enabled   = var.public_network_access_enabled
-  create_deployer_role_assignment = false # Requires Owner role, disabled for CI/CD
+  create_deployer_role_assignment = true # Grant Key Vault Administrator to deployer (GitHub Actions SP)
 
   tags = local.common_tags
 }
