@@ -59,6 +59,45 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Pre-unlock Resources (if locked by Phase 2)
+        run: |
+          RG="labazure-dev-rg"
+
+          # Check if RG exists
+          if az group show --name $RG &>/dev/null; then
+            echo "Unlocking resources in $RG..."
+            
+            # Unlock Key Vault
+            for kv in $(az keyvault list -g $RG --query '[].name' -o tsv 2>/dev/null); do
+              echo "Unlocking Key Vault: $kv"
+              az keyvault update --name $kv -g $RG --public-network-access Enabled &>/dev/null || true
+              az keyvault wait --name $kv -g $RG --updated &>/dev/null || true
+            done
+            
+            # Unlock Storage
+            for sa in $(az storage account list -g $RG --query '[].name' -o tsv 2>/dev/null); do
+              echo "Unlocking Storage: $sa"
+              az storage account update --name $sa -g $RG --public-network-access Enabled --default-action Allow &>/dev/null || true
+            done
+            
+            # Unlock SQL
+            for sql in $(az sql server list -g $RG --query '[].name' -o tsv 2>/dev/null); do
+              echo "Unlocking SQL: $sql"
+              az sql server update --name $sql -g $RG --enable-public-network true &>/dev/null || true
+              az sql server firewall-rule create --server $sql -g $RG --name AllowAll --start-ip-address 0.0.0.0 --end-ip-address 255.255.255.255 &>/dev/null || true
+            done
+            
+            echo "Waiting 30s for changes to propagate..."
+            sleep 30
+          else
+            echo "RG not found, fresh deployment"
+          fi
+
       - name: Terraform Apply - Phase 1 (Public Access)
         run: |
           terraform apply -auto-approve \
