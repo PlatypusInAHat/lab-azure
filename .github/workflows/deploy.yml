@@ -6,6 +6,7 @@ on:
     paths:
       - "terraform/**"
       - "app/**"
+      - "img/**"
   workflow_dispatch:
     inputs:
       environment:
@@ -20,7 +21,6 @@ on:
 env:
   TF_VERSION: "1.5.0"
   DOTNET_VERSION: "8.0.x"
-  # Terraform Service Principal Authentication
   ARM_CLIENT_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
   ARM_CLIENT_SECRET: ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
   ARM_SUBSCRIPTION_ID: ${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}
@@ -75,10 +75,10 @@ jobs:
           echo "database_name=$(terraform output -raw database_name)" >> $GITHUB_OUTPUT
 
   # ==========================================================================
-  # Run Database Migration
+  # Database Migration & Image Upload
   # ==========================================================================
-  database-migration:
-    name: "Database Migration"
+  setup-data:
+    name: "Database & Images"
     runs-on: ubuntu-latest
     needs: terraform-phase1
     environment: ${{ github.event.inputs.environment || 'dev' }}
@@ -94,13 +94,11 @@ jobs:
 
       - name: Run SQL Migration Script
         run: |
-          # Install sqlcmd
           curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
           curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
 
-          # Run migration script
           /opt/mssql-tools18/bin/sqlcmd \
             -S ${{ needs.terraform-phase1.outputs.sql_server_name }}.database.windows.net \
             -d ${{ needs.terraform-phase1.outputs.database_name }} \
@@ -109,13 +107,37 @@ jobs:
             -i app/database/init-database.sql \
             -C
 
+      - name: Upload Images to Blob Storage
+        run: |
+          STORAGE=${{ needs.terraform-phase1.outputs.storage_account }}
+
+          az storage container create \
+            --name user-pictures \
+            --account-name $STORAGE \
+            --auth-mode login || true
+
+          for file in img/*; do
+            if [ -f "$file" ]; then
+              filename=$(basename "$file")
+              echo "Uploading: $filename"
+              az storage blob upload \
+                --container-name user-pictures \
+                --name "$filename" \
+                --file "$file" \
+                --account-name $STORAGE \
+                --auth-mode login \
+                --overwrite || echo "Failed: $filename"
+            fi
+          done
+          echo "✅ Images uploaded"
+
   # ==========================================================================
   # Deploy Application
   # ==========================================================================
   deploy-app:
     name: "Deploy Application"
     runs-on: ubuntu-latest
-    needs: [terraform-phase1, database-migration]
+    needs: [terraform-phase1, setup-data]
     environment: ${{ github.event.inputs.environment || 'dev' }}
 
     steps:
@@ -150,7 +172,7 @@ jobs:
   terraform-phase2:
     name: "Phase 2 - Lock Down (Private)"
     runs-on: ubuntu-latest
-    needs: [terraform-phase1, database-migration, deploy-app]
+    needs: [terraform-phase1, setup-data, deploy-app]
     environment: ${{ github.event.inputs.environment || 'dev' }}
 
     defaults:
@@ -183,7 +205,6 @@ jobs:
           echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| App Service | ${{ needs.terraform-phase1.outputs.app_service_name }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Resource Group | ${{ needs.terraform-phase1.outputs.resource_group }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Database | ${{ needs.terraform-phase1.outputs.database_name }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Phase 1 | ✅ Deployed with public access |" >> $GITHUB_STEP_SUMMARY
-          echo "| Database | ✅ Migration completed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Phase 2 | 🔒 Locked down (private) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Phase 1 | ✅ Public deploy |" >> $GITHUB_STEP_SUMMARY
+          echo "| Data | ✅ DB + Images |" >> $GITHUB_STEP_SUMMARY
+          echo "| Phase 2 | 🔒 Private |" >> $GITHUB_STEP_SUMMARY

@@ -32,4 +32,29 @@ app.MapRazorPages();
 // Health check endpoint for Application Gateway
 app.MapGet("/health", () => Results.Ok("Healthy"));
 
+// Image proxy endpoint - serves blob images through App Service
+// This works even when blob storage is private (App Service uses Managed Identity)
+app.MapGet("/api/images/{container}/{*blobName}", async (string container, string blobName, IBlobStorageService blobService) =>
+{
+    var blobPath = $"{container}/{blobName}";
+    var stream = await blobService.GetBlobStreamAsync(blobPath);
+    
+    if (stream == null)
+        return Results.NotFound();
+
+    // Determine content type from extension
+    var ext = Path.GetExtension(blobName).ToLowerInvariant();
+    var contentType = ext switch
+    {
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".png" => "image/png",
+        ".gif" => "image/gif",
+        ".webp" => "image/webp",
+        ".svg" => "image/svg+xml",
+        _ => "application/octet-stream"
+    };
+
+    return Results.Stream(stream, contentType);
+});
+
 app.Run();

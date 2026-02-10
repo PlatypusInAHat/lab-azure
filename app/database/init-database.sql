@@ -1,7 +1,7 @@
 -- =============================================================================
--- Azure SQL Database Schema for User Profile Application
+-- Azure SQL Database - Hồ sơ người dùng
 -- =============================================================================
--- Create Users table if not exists
+-- Tạo bảng Users nếu chưa tồn tại
 IF NOT EXISTS (
     SELECT *
     FROM sys.tables
@@ -16,7 +16,7 @@ IF NOT EXISTS (
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     UpdatedAt DATETIME2 DEFAULT GETDATE()
 );
--- Insert sample data only when table is first created
+-- Thêm dữ liệu mẫu
 INSERT INTO Users (
         Name,
         Email,
@@ -29,34 +29,20 @@ VALUES (
         'an.nguyen@email.com',
         '0901234567',
         N'123 Đường Lê Lợi, Quận 1, TP.HCM',
-        'user-pictures/user1.jpg'
+        'user-pictures/images.jpg'
     ),
     (
         N'Trần Thị Bình',
         'binh.tran@email.com',
         '0912345678',
         N '456 Đường Nguyễn Huệ, Quận 1, TP.HCM',
-        'user-pictures/user2.jpg'
+        'user-pictures/images (1).jpg'
     ),
     (
         N'Lê Hoàng Cường',
         'cuong.le@email.com',
         '0923456789',
         N'789 Đường Hai Bà Trưng, Quận 3, TP.HCM',
-        'user-pictures/user3.jpg'
-    ),
-    (
-        N'Phạm Minh Dũng',
-        'dung.pham@email.com',
-        '0934567890',
-        N'101 Đường Võ Văn Tần, Quận 3, TP.HCM',
-        'user-pictures/user4.jpg'
-    ),
-    (
-        N'Hoàng Thị Em',
-        'em.hoang@email.com',
-        '0945678901',
-        N'202 Đường Điện Biên Phủ, Bình Thạnh, TP.HCM',
-        'user-pictures/user5.jpg'
+        'user-pictures/images (7).jpg'
     );
 END
