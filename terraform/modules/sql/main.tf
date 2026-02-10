@@ -1,7 +1,7 @@
 # =============================================================================
 # SQL Module - Main Configuration
 # =============================================================================
-# Creates: SQL Server, Database, Private Endpoint
+# Creates: SQL Server, Database, Private Endpoint, Firewall Rules
 # =============================================================================
 
 # SQL Server
@@ -13,9 +13,28 @@ resource "azurerm_mssql_server" "main" {
   administrator_login          = var.admin_username
   administrator_login_password = var.admin_password
 
-  public_network_access_enabled = false
+  public_network_access_enabled = var.public_network_access_enabled
 
   tags = var.tags
+}
+
+# Allow Azure Services access (for GitHub Actions via Azure Login)
+# Only created when public access is enabled (Phase 1)
+resource "azurerm_mssql_firewall_rule" "allow_azure_services" {
+  count            = var.public_network_access_enabled ? 1 : 0
+  name             = "AllowAzureServices"
+  server_id        = azurerm_mssql_server.main.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "0.0.0.0"
+}
+
+# Allow all IPs temporarily for CI/CD (Phase 1 only)
+resource "azurerm_mssql_firewall_rule" "allow_all_for_cicd" {
+  count            = var.public_network_access_enabled ? 1 : 0
+  name             = "AllowCICD"
+  server_id        = azurerm_mssql_server.main.id
+  start_ip_address = "0.0.0.0"
+  end_ip_address   = "255.255.255.255"
 }
 
 # SQL Database
@@ -50,6 +69,3 @@ resource "azurerm_private_endpoint" "sql" {
 
   tags = var.tags
 }
-
-# Note: Azure Services access SQL via Private Endpoint, no firewall rule needed
-# Firewall rules only work when public_network_access_enabled = true
