@@ -8,23 +8,43 @@
 @{
     ViewData["Title"] = "Hồ Sơ Người Dùng";
 
+
+
     List<User> users = new();
+
+
 
     Dictionary<int, string> pictureUrls = new();
 
+
+
     string healthStatus = "";
 
+
+
     string healthClass = "";
+
+
 
     string errorMessage = "";
 
 
 
+
+
+
+
     try
+
+
 
     {
 
+
+
         users = await DbContext.Users.AsNoTracking().ToListAsync();
+
+
 
         foreach (var user in users)
 
@@ -34,44 +54,81 @@
 
             {
 
-                var url = await BlobService.GetBlobUrlAsync(user.ProfilePicturePath);
+                // Always use proxy endpoint - works even when blob storage is private (Phase 2)
 
-                pictureUrls[user.Id] = !string.IsNullOrEmpty(url) ? url : $"/api/images/{user.ProfilePicturePath}";
+                // App Service is VNet-integrated and can access blob via private endpoint
+
+                pictureUrls[user.Id] = $"/api/images/{user.ProfilePicturePath}";
 
             }
 
         }
 
+
+
         healthStatus = "Đã kết nối Azure SQL & Blob Storage";
+
+
 
         healthClass = "success";
 
+
+
     }
+
+
 
     catch (Exception ex)
 
+
+
     {
+
+
 
         healthStatus = "Lỗi kết nối - SQL hoặc Blob Storage không khả dụng";
 
+
+
         healthClass = "error";
+
+
 
         errorMessage = ex.Message;
 
+
+
     }
+
+
+
+
 
 
 
     string GetInitials(string name)
+
     {
+
+
 
         var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
+
+
         if (parts.Length >= 2) return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+
+
 
         return name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
 
+
+
     }
+
+
+
+
 
 
 
@@ -340,6 +397,8 @@
 
         @if (users.Count == 0 && string.IsNullOrEmpty(errorMessage))
 
+
+
         {
             <div class="empty-state">
                 <h2>Chưa có dữ liệu</h2>
@@ -347,7 +406,11 @@
             </div>
         }
 
+
+
         else if (!string.IsNullOrEmpty(errorMessage))
+
+
 
         {
             <div class="empty-state">
@@ -356,19 +419,33 @@
             </div>
         }
 
+
+
         else
+
+
 
         {
             <div class="users-grid">
                 @foreach (var user in users)
 
+
+
                 {
+
+
 
                     var pictureUrl = pictureUrls.GetValueOrDefault(user.Id, "");
 
+
+
                     var hasImage = !string.IsNullOrEmpty(pictureUrl);
 
+
+
                     var initials = GetInitials(user.Name);
+
+
 
                     var avatarColor = AvatarColors[user.Id % AvatarColors.Length];
                     <div class="user-card">

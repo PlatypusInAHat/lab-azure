@@ -58,3 +58,10 @@ resource "azurerm_role_assignment" "app_storage_blob" {
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = var.app_service_principal_id
 }
+
+# Grant App Service read-only access to Storage for displaying images
+resource "azurerm_role_assignment" "app_storage_blob_reader" {
+  scope                = azurerm_storage_account.main.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = var.app_service_principal_id
+}
