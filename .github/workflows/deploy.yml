@@ -68,47 +68,55 @@ jobs:
         run: |
           RG="labazure-dev-rg"
 
-          # Purge any soft-deleted Key Vaults to prevent recovery with old settings
+          # Purge any soft-deleted Key Vaults
           echo "=== Purging soft-deleted Key Vaults ==="
           for kv in $(az keyvault list-deleted --query '[?contains(properties.vaultId, `labazure`)].name' -o tsv 2>/dev/null); do
             echo "Purging soft-deleted KV: $kv"
             az keyvault purge --name $kv --no-wait || true
           done
 
-          # Check if RG exists and unlock resources
+          # Unlock existing resources if RG exists
           if az group show --name $RG &>/dev/null; then
-            echo "=== Unlocking resources in $RG ==="
+            echo "=== Unlocking resources ==="
             
-            # Unlock Key Vault
             for kv in $(az keyvault list -g $RG --query '[].name' -o tsv 2>/dev/null); do
-              echo "Unlocking Key Vault: $kv"
-              az keyvault update --name $kv -g $RG --public-network-access Enabled &>/dev/null || true
+              echo "Unlocking KV: $kv"
+              az keyvault update --name $kv -g $RG --public-network-access Enabled --default-action Allow 2>/dev/null || true
             done
             
-            # Unlock Storage
             for sa in $(az storage account list -g $RG --query '[].name' -o tsv 2>/dev/null); do
               echo "Unlocking Storage: $sa"
-              az storage account update --name $sa -g $RG --public-network-access Enabled --default-action Allow &>/dev/null || true
+              az storage account update --name $sa -g $RG --public-network-access Enabled --default-action Allow 2>/dev/null || true
             done
             
-            # Unlock SQL
             for sql in $(az sql server list -g $RG --query '[].name' -o tsv 2>/dev/null); do
               echo "Unlocking SQL: $sql"
-              az sql server update --name $sql -g $RG --enable-public-network true &>/dev/null || true
-              az sql server firewall-rule create --server $sql -g $RG --name AllowAll --start-ip-address 0.0.0.0 --end-ip-address 255.255.255.255 &>/dev/null || true
+              az sql server update --name $sql -g $RG --enable-public-network true 2>/dev/null || true
+              az sql server firewall-rule create --server $sql -g $RG --name AllowAll --start-ip-address 0.0.0.0 --end-ip-address 255.255.255.255 2>/dev/null || true
             done
             
-            echo "Waiting 30s for changes to propagate..."
-            sleep 30
+            echo "Waiting 60s for propagation..."
+            sleep 60
           else
-            echo "RG not found, fresh deployment"
+            echo "RG not found, fresh deployment - waiting for KV purge..."
+            sleep 30
           fi
 
-          # Wait for KV purge to complete
-          echo "Waiting for KV purge to complete..."
+      - name: Terraform Apply - Network First (targeted)
+        run: |
+          terraform apply -auto-approve \
+            -var="sql_admin_password=${{ secrets.SQL_ADMIN_PASSWORD }}" \
+            -var="public_network_access_enabled=true" \
+            -target=module.key_vault.azurerm_key_vault.main \
+            -target=module.storage.azurerm_storage_account.main \
+            -target=module.sql.azurerm_mssql_server.main \
+            -target=module.sql.azurerm_mssql_firewall_rule.allow_azure_services \
+            -target=module.sql.azurerm_mssql_firewall_rule.allow_all_for_cicd \
+            -target=module.app_service.azurerm_linux_web_app.main || true
+          echo "Waiting 30s for network changes..."
           sleep 30
 
-      - name: Terraform Apply - Phase 1 (Public Access)
+      - name: Terraform Apply - Phase 1 (Full)
         run: |
           terraform apply -auto-approve \
             -var="sql_admin_password=${{ secrets.SQL_ADMIN_PASSWORD }}" \
