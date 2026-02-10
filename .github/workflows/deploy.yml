@@ -68,15 +68,21 @@ jobs:
         run: |
           RG="labazure-dev-rg"
 
-          # Check if RG exists
+          # Purge any soft-deleted Key Vaults to prevent recovery with old settings
+          echo "=== Purging soft-deleted Key Vaults ==="
+          for kv in $(az keyvault list-deleted --query '[?contains(properties.vaultId, `labazure`)].name' -o tsv 2>/dev/null); do
+            echo "Purging soft-deleted KV: $kv"
+            az keyvault purge --name $kv --no-wait || true
+          done
+
+          # Check if RG exists and unlock resources
           if az group show --name $RG &>/dev/null; then
-            echo "Unlocking resources in $RG..."
+            echo "=== Unlocking resources in $RG ==="
             
             # Unlock Key Vault
             for kv in $(az keyvault list -g $RG --query '[].name' -o tsv 2>/dev/null); do
               echo "Unlocking Key Vault: $kv"
               az keyvault update --name $kv -g $RG --public-network-access Enabled &>/dev/null || true
-              az keyvault wait --name $kv -g $RG --updated &>/dev/null || true
             done
             
             # Unlock Storage
@@ -97,6 +103,10 @@ jobs:
           else
             echo "RG not found, fresh deployment"
           fi
+
+          # Wait for KV purge to complete
+          echo "Waiting for KV purge to complete..."
+          sleep 30
 
       - name: Terraform Apply - Phase 1 (Public Access)
         run: |
