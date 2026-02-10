@@ -16,6 +16,58 @@ builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 
 var app = builder.Build();
 
+// Auto-create database tables and seed data on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    try
+    {
+        // EnsureCreated will create tables if they don't exist
+        db.Database.EnsureCreated();
+
+        // Seed data if empty
+        if (!db.Users.Any())
+        {
+            db.Users.AddRange(
+                new UserProfileApp.Models.User
+                {
+                    Name = "Nguyen Van An",
+                    Email = "an.nguyen@email.com",
+                    PhoneNumber = "0901234567",
+                    Address = "123 Le Loi, Quan 1, TP.HCM",
+                    ProfilePicturePath = "user-pictures/images.jpg"
+                },
+                new UserProfileApp.Models.User
+                {
+                    Name = "Tran Thi Binh",
+                    Email = "binh.tran@email.com",
+                    PhoneNumber = "0912345678",
+                    Address = "456 Nguyen Hue, Quan 1, TP.HCM",
+                    ProfilePicturePath = "user-pictures/images (1).jpg"
+                },
+                new UserProfileApp.Models.User
+                {
+                    Name = "Le Hoang Cuong",
+                    Email = "cuong.le@email.com",
+                    PhoneNumber = "0923456789",
+                    Address = "789 Hai Ba Trung, Quan 3, TP.HCM",
+                    ProfilePicturePath = "user-pictures/images (7).jpg"
+                }
+            );
+            db.SaveChanges();
+            Console.WriteLine("Database seeded with 3 users.");
+        }
+        else
+        {
+            Console.WriteLine($"Database already has {db.Users.Count()} users.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Database init error: {ex.Message}");
+    }
+}
+
 // Configure the HTTP request pipeline
 if (!app.Environment.IsDevelopment())
 {
