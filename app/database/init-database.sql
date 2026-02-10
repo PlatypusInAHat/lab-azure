@@ -11,7 +11,7 @@ IF NOT EXISTS (
     ProfilePicturePath NVARCHAR(500),
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     UpdatedAt DATETIME2 DEFAULT GETDATE()
-);
+)
 INSERT INTO Users (
         Name,
         Email,
@@ -20,24 +20,24 @@ INSERT INTO Users (
         ProfilePicturePath
     )
 VALUES (
-        N 'Nguyen Van An',
-        N'an.nguyen@email.com',
-        N'0901234567',
-        N'123 Le Loi, Quan 1, TP.HCM',
-        N'user-pictures/images.jpg'
+        'Nguyen Van An',
+        'an.nguyen@email.com',
+        '0901234567',
+        '123 Le Loi, Quan 1, TP.HCM',
+        'user-pictures/images.jpg'
     ),
     (
-        N'Tran Thi Binh',
-        N'binh.tran@email.com',
-        N'0912345678',
-        N '456 Nguyen Hue, Quan 1, TP.HCM',
-        N'user-pictures/images (1).jpg'
+        'Tran Thi Binh',
+        'binh.tran@email.com',
+        '0912345678',
+        '456 Nguyen Hue, Quan 1, TP.HCM',
+        'user-pictures/images (1).jpg'
     ),
     (
-        N'Le Hoang Cuong',
-        N'cuong.le@email.com',
-        N'0923456789',
-        N'789 Hai Ba Trung, Quan 3, TP.HCM',
-        N'user-pictures/images (7).jpg'
-    );
+        'Le Hoang Cuong',
+        'cuong.le@email.com',
+        '0923456789',
+        '789 Hai Ba Trung, Quan 3, TP.HCM',
+        'user-pictures/images (7).jpg'
+    )
 END

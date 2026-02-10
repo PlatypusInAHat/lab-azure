@@ -234,6 +234,14 @@ jobs:
           app-name: ${{ needs.terraform-phase1.outputs.app_service_name }}
           package: app/src/UserProfileApp/publish
 
+      - name: Restart App Service
+        run: |
+          az webapp restart --name ${{ needs.terraform-phase1.outputs.app_service_name }} --resource-group ${{ needs.terraform-phase1.outputs.resource_group }}
+          echo "Waiting 30s for app to start..."
+          sleep 30
+          echo "Checking app health..."
+          curl -s -o /dev/null -w "%{http_code}" https://${{ needs.terraform-phase1.outputs.app_service_name }}.azurewebsites.net/health || true
+
   # ==========================================================================
   # Phase 2: Lock Down Infrastructure
   # ==========================================================================
