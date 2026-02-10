@@ -114,6 +114,8 @@ module "sql" {
   admin_password = var.sql_admin_password
   database_sku   = var.sql_database_sku
 
+  public_network_access_enabled = var.public_network_access_enabled
+
   tags = local.common_tags
 }
 

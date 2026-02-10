@@ -68,6 +68,12 @@ variable "zone_redundant" {
   default     = false
 }
 
+variable "public_network_access_enabled" {
+  description = "Enable public network access (true for Phase 1, false for Phase 2)"
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Tags to apply to resources"
   type        = map(string)
