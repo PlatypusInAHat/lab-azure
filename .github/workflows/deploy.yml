@@ -99,22 +99,33 @@ jobs:
           sudo apt-get update
           sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev
 
+          echo "=== Running migration ==="
           /opt/mssql-tools18/bin/sqlcmd \
             -S ${{ needs.terraform-phase1.outputs.sql_server_name }}.database.windows.net \
             -d ${{ needs.terraform-phase1.outputs.database_name }} \
             -U sqladmin \
             -P "${{ secrets.SQL_ADMIN_PASSWORD }}" \
             -i app/database/init-database.sql \
+            -e -C
+
+          echo "=== Verifying table exists ==="
+          /opt/mssql-tools18/bin/sqlcmd \
+            -S ${{ needs.terraform-phase1.outputs.sql_server_name }}.database.windows.net \
+            -d ${{ needs.terraform-phase1.outputs.database_name }} \
+            -U sqladmin \
+            -P "${{ secrets.SQL_ADMIN_PASSWORD }}" \
+            -Q "SELECT name FROM sys.tables; SELECT COUNT(*) AS UserCount FROM Users;" \
             -C
 
       - name: Upload Images to Blob Storage
         run: |
           STORAGE=${{ needs.terraform-phase1.outputs.storage_account }}
+          KEY=$(az storage account keys list --account-name $STORAGE --resource-group ${{ needs.terraform-phase1.outputs.resource_group }} --query '[0].value' -o tsv)
 
           az storage container create \
             --name user-pictures \
             --account-name $STORAGE \
-            --auth-mode login || true
+            --account-key "$KEY" || true
 
           for file in img/*; do
             if [ -f "$file" ]; then
@@ -125,7 +136,7 @@ jobs:
                 --name "$filename" \
                 --file "$file" \
                 --account-name $STORAGE \
-                --auth-mode login \
+                --account-key "$KEY" \
                 --overwrite || echo "Failed: $filename"
             fi
           done

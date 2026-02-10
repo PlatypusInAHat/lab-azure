@@ -1,7 +1,6 @@
 -- =============================================================================
--- Azure SQL Database - Hồ sơ người dùng
+-- Azure SQL Database - User Profiles
 -- =============================================================================
--- Tạo bảng Users nếu chưa tồn tại
 IF NOT EXISTS (
     SELECT *
     FROM sys.tables
@@ -16,7 +15,6 @@ IF NOT EXISTS (
     CreatedAt DATETIME2 DEFAULT GETDATE(),
     UpdatedAt DATETIME2 DEFAULT GETDATE()
 );
--- Thêm dữ liệu mẫu
 INSERT INTO Users (
         Name,
         Email,
@@ -25,24 +23,24 @@ INSERT INTO Users (
         ProfilePicturePath
     )
 VALUES (
-        N 'Nguyễn Văn An',
-        'an.nguyen@email.com',
-        '0901234567',
-        N'123 Đường Lê Lợi, Quận 1, TP.HCM',
-        'user-pictures/images.jpg'
+        N 'Nguyen Van An',
+        N'an.nguyen@email.com',
+        N'0901234567',
+        N'123 Le Loi, Quan 1, TP.HCM',
+        N'user-pictures/images.jpg'
     ),
     (
-        N'Trần Thị Bình',
-        'binh.tran@email.com',
-        '0912345678',
-        N '456 Đường Nguyễn Huệ, Quận 1, TP.HCM',
-        'user-pictures/images (1).jpg'
+        N'Tran Thi Binh',
+        N'binh.tran@email.com',
+        N'0912345678',
+        N '456 Nguyen Hue, Quan 1, TP.HCM',
+        N'user-pictures/images (1).jpg'
     ),
     (
-        N'Lê Hoàng Cường',
-        'cuong.le@email.com',
-        '0923456789',
-        N'789 Đường Hai Bà Trưng, Quận 3, TP.HCM',
-        'user-pictures/images (7).jpg'
+        N'Le Hoang Cuong',
+        N'cuong.le@email.com',
+        N'0923456789',
+        N'789 Hai Ba Trung, Quan 3, TP.HCM',
+        N'user-pictures/images (7).jpg'
     );
 END
